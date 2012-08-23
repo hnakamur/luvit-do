@@ -154,7 +154,7 @@ The signature of `fn` is `function fn(item, callback, errback)` or any regular c
 
     -- Direct callback filter
     local files = {'users.json', 'pages.json', 'products.json'}
-    function check_and_load(filename, callback, errback)
+    function checkAndLoad(filename, callback, errback)
       FS.stat(filename)(function(stat)
         if stat.is_file then
           loadFile(filename, callback, errback)
@@ -163,13 +163,13 @@ The signature of `fn` is `function fn(item, callback, errback)` or any regular c
         end
       end, errback)
     end
-    Do.filterMap(files, check_and_load)(function(filtered_files_with_data)
+    Do.filterMap(files, checkAndLoad)(function(filtered_files_with_data)
       -- Do something
     end, errorHandler)
 
     -- Continuable based filter
     local files = {'users.json', 'pages.json', 'products.json'}
-    function check_and_load(filename)
+    function checkAndLoad(filename)
       return function(callback, errback)
         FS.stat(filename)(function(stat)
           if stat.is_file then
@@ -180,7 +180,7 @@ The signature of `fn` is `function fn(item, callback, errback)` or any regular c
         end, errback)
       end
     end
-    Do.filterMap(files, check_and_load)(function(filtered_files_with_data)
+    Do.filterMap(files, checkAndLoad)(function(filtered_files_with_data)
       -- Do something
     end, errorHandler)
 

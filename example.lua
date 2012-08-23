@@ -26,7 +26,7 @@ FS.readdir('.')(showResults, showError)
 
 -- A very slow error to make sure that no success message is emitted if there
 -- is an error anywhere.
-function slow_error()
+function slowError()
   return function(callback, errback)
     Timer.setTimeout(500, function()
       errback("Yikes!")
@@ -58,7 +58,7 @@ Do.parallel(
 
 Do.parallel(
   FS.readFile(__filename),
-  slow_error()
+  slowError()
 )(showResults, showError)
 
 Do.parallel(
@@ -74,14 +74,14 @@ Do.parallel(
 )(showResults, showError)
 
 -- Filter callback that only let's files through by using stat
-function only_files(filename, callback, errback)
+function onlyFiles(filename, callback, errback)
   FS.stat(filename)(function (stat)
     callback(stat.is_file)
   end, errback)
 end
 
 -- Filter that replaces a filename with the pair of filename and content
-function marked_read(filename, callback, errback)
+function markedRead(filename, callback, errback)
   FS.readFile(filename)(function (data)
     if #data < 10 then
       errback(filename .. " is too small!")
@@ -91,10 +91,10 @@ function marked_read(filename, callback, errback)
   end, errback)
 end
 
-function check_and_load(filename, callback, errback)
+function checkAndLoad(filename, callback, errback)
   FS.stat(filename)(function (stat)
     if stat.is_file then
-      marked_read(filename, callback, errback)
+      markedRead(filename, callback, errback)
     else
       callback()
     end
@@ -107,22 +107,22 @@ print("a " .. dump(a))
 function loaddir(path)
   return function (callback, errback)
     FS.readdir(path)(function(filenames)
-      Do.filter(filenames, only_files)(function(filenames)
-        Do.map(filenames, marked_read)(callback, errback)
+      Do.filter(filenames, onlyFiles)(function(filenames)
+        Do.map(filenames, markedRead)(callback, errback)
       end, errback)
     end, errback)
   end
 end
 loaddir(__dirname)(debug, showError)
 
-function fast_loaddir(path)
+function fastLoaddir(path)
   return function(callback, errback)
     FS.readdir(path)(function(filenames)
-      Do.filterMap(filenames, check_and_load)(callback, errback)
+      Do.filterMap(filenames, checkAndLoad)(callback, errback)
     end, errback)
   end
 end
-fast_loaddir(__dirname)(debug, showError)
+fastLoaddir(__dirname)(debug, showError)
 
 
 local function split(str, sep)
@@ -154,7 +154,7 @@ local function filter(array, predicate)
   return filtered
 end
 
-function get_keywords(text)
+function getKeywords(text)
   return function (callback, errback)
     Timer.setTimeout(0, function()
       local last
@@ -174,13 +174,13 @@ end
 
 Do.chain(
   FS.readFile(__filename),
-  get_keywords
+  getKeywords
 )(debug, showError)
 
 Do.chain(
   FS.readdir(__dirname),
   function(filenames)
-    return Do.filterMap(filenames, check_and_load)
+    return Do.filterMap(filenames, checkAndLoad)
   end
 )(debug, showError)
 
@@ -188,7 +188,7 @@ Do.chain(
 local files = {"example.lua", "README.md"}
 Do.map(files, FS.readFile)(debug, showError)
 
-function safe_load(filename)
+function safeLoad(filename)
   return function (callback, errback)
     FS.stat(filename)(function (stat)
       if stat.is_file then
@@ -202,5 +202,5 @@ end
 
 -- Use filterMap with new continuable based filter
 FS.readdir(__dirname)(function (list)
-  Do.filterMap(list, safe_load)(debug, showError)
+  Do.filterMap(list, safeLoad)(debug, showError)
 end, showError)
