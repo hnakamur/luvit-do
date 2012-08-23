@@ -217,6 +217,6 @@ If you're writing a library, make sure to export all your async functions follow
 
 ## License
 
-Do is [licensed][] under the [MIT license][].
+Do is licensed under the [MIT license][].
 
 [MIT license]: http://opensource.org/licenses/MIT
