@@ -1,5 +1,6 @@
 local dump = require('utils').dump
 local string = require('string')
+local table = require('table')
 
 local exports = {}
 -- Takes an array of actions and runs them all in parallel.
@@ -39,7 +40,7 @@ function exports.chain(actions, ...)
     local pos = 1
     function loop(result)
       pos = pos + 1
-      if pos >= #actions then
+      if pos > #actions then
         callback(result)
       else
         actions[pos](result)(loop, errback)
@@ -60,8 +61,6 @@ function exports.map(array, fn)
         new_array[index] = result
         counter = counter - 1
         if counter <= 0 then
-          -- I don't think this code in node.js version is needed.
-          -- new_array.length = array.length
           callback(new_array)
         end
       end
@@ -101,9 +100,20 @@ function exports.filter(array, fn)
   end
 end
 
+function getTableKeys(table)
+  local keys = {}
+  for key, _ in pairs(table) do
+    keys[#keys + 1] = key
+  end
+  return keys
+end
+
 function filterArray(array, predicate)
+  local keys = getTableKeys(array)
+  table.sort(keys)
   local new_array = {}
-  for _, item in ipairs(array) do
+  for _, key in ipairs(keys) do
+    local item = array[key]
     if predicate(item) then
       new_array[#new_array + 1] = item
     end
@@ -123,8 +133,6 @@ function exports.filterMap(array, fn)
         new_array[index] = result
         counter = counter - 1
         if counter <= 0 then
-          -- I don't think this code in node.js version is needed.
-          -- new_array.length = array.length
           callback(filterArray(new_array, function(item)
             return item ~= nil
           end))
@@ -136,27 +144,6 @@ function exports.filterMap(array, fn)
       end
     end
   end
-end
-
--- Allows to group several callbacks.
-function exports.combo(callback)
-  local items = 0
-  local results = {}
-  function add()
-    local id = items
-    items = items + 1
-    return function (...)
-      check(id, ...)
-    end
-  end
-  function check(id, ...)
-    results[id] = {...}
-    items = items - 1
-    if items == 0 then
-      callback(results)
-    end
-  end
-  return { add = add, check = check }
 end
 
 function indexOf(array, value)

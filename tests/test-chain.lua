@@ -2,17 +2,19 @@ local Do = require('../do')
 
 local exports = {}
 
-exports['test_parallel_array_arg'] = function(test, asserts)
+exports['test_chain_array_arg'] = function(test, asserts)
   function action1(cb, eb)
     process.nextTick(function()
       cb(1)
     end)
   end
 
-  function action2(cb, eb)
-    process.nextTick(function()
-      cb(2)
-    end)
+  function action2(result)
+    return function(cb, eb)
+      process.nextTick(function()
+        cb{result, 2}
+      end)
+    end
   end
 
   function callback(results)
@@ -25,28 +27,29 @@ exports['test_parallel_array_arg'] = function(test, asserts)
     test.done()
   end
 
-  Do.parallel{
+  Do.chain{
     action1,
     action2
   }(callback, errback)
 end
 
-exports['test_parallel_vararg'] = function(test, asserts)
+exports['test_chain_vararg'] = function(test, asserts)
   function action1(cb, eb)
     process.nextTick(function()
       cb(1)
     end)
   end
 
-  function action2(cb, eb)
-    process.nextTick(function()
-      cb(2)
-    end)
+  function action2(result)
+    return function(cb, eb)
+      process.nextTick(function()
+        cb{result, 2}
+      end)
+    end
   end
 
-  function callback(result1, result2)
-    asserts.equals(result1, 1)
-    asserts.equals(result2, 2)
+  function callback(results)
+    asserts.dequals(results, {1, 2})
     test.done()
   end
 
@@ -55,7 +58,7 @@ exports['test_parallel_vararg'] = function(test, asserts)
     test.done()
   end
 
-  Do.parallel(
+  Do.chain(
     action1,
     action2
   )(callback, errback)
